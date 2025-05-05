@@ -1,0 +1,34 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}</h1>
+    
+    <!-- Display Profile Image -->
+    <div>
+        {% if user.userprofile.profile_pic and user.userprofile.profile_pic.url %}
+            <img src="{{ user.userprofile.profile_pic.url }}" class="rounded-circle mb-2" 
+                 style="width: 100px; height: 100px; object-fit: cover;">
+        {% else %}
+            <img src="{% static 'images/default.jpg' %}" class="rounded-circle mb-2" 
+                 style="width: 100px; height: 100px; object-fit: cover;">
+        {% endif %}
+    </div>
+    
+    <p><strong>Bio:</strong> {{ user.userprofile.bio }}</p> 
+    <p><strong>Birth Date:</strong> {{ user.userprofile.birth_date }}</p>  
+
+    <!-- Link to Edit Profile -->
+    <a href="{% url 'edit_profile' %}">Edit Profile</a>
+
+    <div class="back-link">
+        <a href="{% url 'feed' %}" class="text-decoration-none">← Back to Feed</a>
+    </div>
+</body>
+</html>

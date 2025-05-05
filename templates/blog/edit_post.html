@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Post - BlogShare{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Post
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Title Field -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ post.title }}" required>
+                        </div>
+                        
+                        <!-- Content Field -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content</label>
+                            <textarea class="form-control" id="content" name="content" 
+                                      rows="6" required>{{ post.content }}</textarea>
+                        </div>
+                        
+                        <!-- Image Field -->
+                        <div class="mb-4">
+                            <label for="image" class="form-label">Post Image</label>
+                            <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                            
+                            {% if post.image %}
+                            <div class="mt-2">
+                                <p class="small text-muted mb-1">Current Image:</p>
+                                <img src="{{ post.image.url }}" alt="Current post image" 
+                                     class="img-thumbnail" style="max-height: 200px;">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="remove_image" name="remove_image">
+                                    <label class="form-check-label" for="remove_image">
+                                        Remove current image
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'post_detail' post_id=post.id %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Simple client-side validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const title = document.getElementById('title').value.trim();
+    const content = document.getElementById('content').value.trim();
+    
+    if (!title || !content) {
+        e.preventDefault();
+        alert('Please fill in both title and content fields.');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Edit User: {{ user.username }}</h2>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+        </div>
+        <div class="form-group">
+            <label for="is_active">Is Active:</label>
+            <select class="form-control" id="is_active" name="is_active">
+                <option value="True" {% if user.is_active %}selected{% endif %}>Active</option>
+                <option value="False" {% if not user.is_active %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+
+    <a href="{% url 'view_user' user.id %}" class="btn btn-secondary mt-3">Cancel</a>
+</div>
+{% endblock %}
