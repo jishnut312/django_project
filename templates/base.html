@@ -11,10 +11,9 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% if request.user.is_authenticated and request.user.userprofile.dark_mode %}bg-dark text-light{% endif %}">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid">
@@ -27,10 +26,21 @@
             <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{% url 'profile' %}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle me-1"></i> {{ user.username }}
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" 
+                                   href="{% url 'logout' %}" 
+                                   onclick="return confirm('Are you sure you want to logout?');">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% endif %}
                 </ul>
@@ -39,40 +49,53 @@
     </nav>
 
     <!-- Mobile Menu Button -->
-    <button class="d-lg-none btn btn-primary position-fixed" style="z-index: 2000; bottom: 20px; left: 60px;" 
-            data-bs-toggle="offcanvas" data-bs-target="#sidebar">
-        ☰ Menu
+    <button class="d-lg-none btn btn-primary position-fixed mobile-menu-btn" 
+            data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+            style="z-index: 2000;">
+        <i class="bi bi-list"></i>
     </button>
 
     <div class="d-flex">
         <!-- Sidebar -->
-        <div class="offcanvas-lg offcanvas-start bg-light border-end" tabindex="-1" id="sidebar" style="width: 230px;">
+        <div class="offcanvas-lg offcanvas-start {% if request.user.is_authenticated and request.user.userprofile.dark_mode %}bg-dark text-light{% else %}bg-light{% endif %} border-end" 
+             tabindex="-1" id="sidebar" style="width: 280px;">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title">Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar"></button>
+                <button type="button" class="btn-close {% if request.user.is_authenticated and request.user.userprofile.dark_mode %}btn-close-white{% endif %}" 
+                        data-bs-dismiss="offcanvas" data-bs-target="#sidebar"></button>
             </div>
             <div class="offcanvas-body d-flex flex-column">
                 {% if user.is_authenticated %}
                 <div class="text-center mb-4">
-                    {% if user.userprofile.profile_pic %}  <!-- Changed from profile_pic to profilepic -->
-                        <img src="{{ user.userprofile.profile_pic.url }}" alt="Profile Picture" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% if user.userprofile.profile_pic %}
+                        <img src="{{ user.userprofile.profile_pic.url }}" alt="Profile Picture" 
+                             class="rounded-circle border border-3 {% if request.user.userprofile.dark_mode %}border-light{% else %}border-primary{% endif %}" 
+                             style="width: 80px; height: 80px; object-fit: cover;">
                     {% else %}
-                        <img src="{% static 'images/default-profile.jpg' %}" alt="Default Profile Picture" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                        <div class="d-flex align-items-center justify-content-center {% if request.user.userprofile.dark_mode %}bg-secondary{% else %}bg-light{% endif %} rounded-circle mx-auto" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill fs-3 {% if request.user.userprofile.dark_mode %}text-light{% else %}text-secondary{% endif %}"></i>
+                        </div>
                     {% endif %}
-                    <p class="fw-bold mb-0">{{ user.username }}</p>
+                    <p class="fw-bold mb-0 mt-2">{{ user.username }}</p>
+                    <small class="{% if request.user.userprofile.dark_mode %}text-light{% else %}text-muted{% endif %}">{{ user.email }}</small>
                 </div>
                 {% endif %}
-                
-
-                    
                 
                 <!-- Search -->
                 <div class="mb-4 px-2">
                     <form method="get" action="{% url 'feed' %}" class="search-form">
-                        <div class="input-group">
-                            <input type="search" class="form-control" name="q" placeholder="Search posts..." value="{{ request.GET.q }}">
-                            <button class="btn btn-outline-primary" type="submit">
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text {% if request.user.is_authenticated and request.user.userprofile.dark_mode %}bg-dark text-light border-dark{% else %}bg-light{% endif %}">
                                 <i class="bi bi-search"></i>
+                            </span>
+                            <input type="search" 
+                                   class="form-control {% if request.user.is_authenticated and request.user.userprofile.dark_mode %}bg-dark text-light border-dark{% endif %}" 
+                                   name="q" 
+                                   placeholder="Search posts..." 
+                                   value="{{ request.GET.q }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-arrow-right"></i>
                             </button>
                         </div>
                     </form>
@@ -81,33 +104,51 @@
                 <!-- Navigation -->
                 <ul class="nav flex-column flex-grow-1">
                     <li class="nav-item mb-2">
-                        <a class="nav-link" href="{% url 'feed' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'feed' %}active bg-primary text-white{% endif %} rounded" 
+                           href="{% url 'feed' %}">
                             <i class="bi bi-house-door me-2"></i>Home
+                            {% if request.resolver_match.url_name == 'feed' %}
+                                <span class="position-absolute end-0 me-3">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            {% endif %}
                         </a>
                     </li>
                     {% if user.is_authenticated %}
                     <li class="nav-item mb-2">
-                        <a class="nav-link" href="{% url 'post_create' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'post_create' %}active bg-primary text-white{% endif %} rounded" 
+                           href="{% url 'post_create' %}">
                             <i class="bi bi-plus-square me-2"></i>New Post
+                            {% if request.resolver_match.url_name == 'post_create' %}
+                                <span class="position-absolute end-0 me-3">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            {% endif %}
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link" href="{% url 'profile' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active bg-primary text-white{% endif %} rounded" 
+                           href="{% url 'profile' %}">
                             <i class="bi bi-person me-2"></i>Profile
+                            {% if request.resolver_match.url_name == 'profile' %}
+                                <span class="position-absolute end-0 me-3">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            {% endif %}
                         </a>
                     </li>
+                    
                     {% endif %}
                     
                     <li class="nav-item mt-auto">
                         {% if user.is_authenticated %}
-                        <a class="nav-link text-danger" 
-   href="{% url 'logout' %}" 
-   onclick="return confirm('Are you sure you want to logout?');">
-    <i class="bi bi-box-arrow-right me-2"></i>Logout
-</a>
-
+                        <a class="nav-link text-danger rounded" 
+                           href="{% url 'logout' %}" 
+                           onclick="return confirm('Are you sure you want to logout?');">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </a>
                         {% else %}
-                        <a class="nav-link text-primary" href="{% url 'userLogin' %}">
+                        <a class="nav-link text-primary rounded" href="{% url 'userLogin' %}">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Login
                         </a>
                         {% endif %}
@@ -117,7 +158,7 @@
         </div>
 
         <!-- Main Content -->
-        <main class="flex-grow-1" style="margin-left: 230px;">
+        <main class="flex-grow-1" style="margin-left: 280px;">
             {% if messages %}
             <div class="container mt-3">
                 {% for message in messages %}
@@ -134,9 +175,18 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-light py-3">
+    <footer class="{% if request.user.is_authenticated and request.user.userprofile.dark_mode %}bg-dark text-light border-dark{% else %}bg-light{% endif %} py-3 border-top">
         <div class="container">
-            <p class="text-center mb-0">© {% now "Y" %} BlogShare. All rights reserved.</p>
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">© {% now "Y" %} BlogShare. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-decoration-none me-2">Terms</a>
+                    <a href="#" class="text-decoration-none me-2">Privacy</a>
+                    <a href="#" class="text-decoration-none">Contact</a>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -145,21 +195,97 @@
     {% block extra_js %}{% endblock %}
 
     <style>
-        @media (max-width: 992px) {
-            main { margin-left: 0 !important; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+        
+        main {
+            flex: 1;
+            padding-bottom: 60px; /* Space for footer */
+        }
+        
+        .nav-link {
+            transition: all 0.2s;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+        
+        .nav-link.active {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .search-form .form-control:focus {
+            box-shadow: none;
+            border-color: #0d6efd;
+        }
+        
+        .mobile-menu-btn {
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 992px) {
+            main { 
+                margin-left: 0 !important; 
+            }
+            
+            .offcanvas-lg {
+                width: 280px !important;
+            }
+        }
+        
         .card {
             transition: transform 0.2s;
         }
+        
         .card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         }
+        
         .navbar-brand {
             font-size: 1.5rem;
         }
-        .search-form .input-group {
-            width: 100%;
-        }
     </style>
+    
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Auto-dismiss alerts after 5 seconds
+            var alertList = document.querySelectorAll('.alert');
+            alertList.forEach(function (alert) {
+                setTimeout(function() {
+                    var bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+            
+            // Add active class to current page link
+            var currentUrl = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(function(link) {
+                if (link.getAttribute('href') === currentUrl) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
